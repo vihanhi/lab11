@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Lab11</string>
+    <string name="uname">Enter Username</string>
+    <string name="pass">Enter Password</string>
+    <string name="btnlogin">Login</string>
+    <string name="newuser">Not Registered</string>
+    <string name="reglink">Register Here</string>
+    <string name="unamer">User Name</string>
+    <string name="passr">Password</string>
+    <string name="confirmpwr">Confirm Password</string>
+    <string name="regbtn">Register</string>
+    <string name="loginlink">Already Registered</string>
+    <string name="login">Login Here</string>
+</resources>

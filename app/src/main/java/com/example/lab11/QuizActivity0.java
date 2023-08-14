@@ -1,0 +1,215 @@
+package com.example.lab11;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.os.Handler;
+import android.provider.Settings;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.lab11.Database.Database;
+import com.example.lab11.Database.Question;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Locale;
+
+public class QuizActivity0 extends AppCompatActivity {
+    public static final String EXTRA_SCORE = "Score More";
+    private static final String KEY_SCORE = "keyscore";
+    private static final String KEY_QUESTION_COUNT = "keyQuestionCount";
+    private static final String Key_ANSWERED = "keyAnswered";
+    private static final String KEY_QUESTION_LIST = "keyQuestionList";
+
+
+    private TextView textViewQuestion;
+    private TextView textViewScore;
+    private TextView textViewQuestionCount;
+    private TextView textViewCountDown;
+    private RadioGroup rbGroup;
+    private RadioButton rb1;
+    private RadioButton rb2;
+    private RadioButton rb3;
+    private Button buttonConfirmNext;
+
+    private Drawable backGroundColorDefaultRb;
+    private ColorStateList textColorDefaultCd;
+
+    private ArrayList<Question> questionList;
+    private int questionCounter;
+    private int questionCountTotal;
+    private Question currentQuestion;
+
+    private int score;
+    private boolean answered;
+    MediaPlayer player1;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_quiz);
+
+        textViewQuestion = findViewById(R.id._text_view_question);
+        textViewScore = findViewById(R.id.text_view_score);
+        textViewQuestionCount = findViewById(R.id.text_view_question_count);
+        textViewCountDown = findViewById(R.id.text_view_countdown);
+        rbGroup = findViewById(R.id.radio_group);
+        rb1 = findViewById(R.id.radio_button1);
+        rb2 = findViewById(R.id.radio_button2);
+        rb3 = findViewById(R.id.radio_button3);
+        buttonConfirmNext = findViewById(R.id.button_confirm_next);
+        player1= MediaPlayer.create(this, Settings.System.DEFAULT_RINGTONE_URI);
+        //add a drawable src media and load
+        //in your assignment as the player media
+        backGroundColorDefaultRb = rb1.getBackground();
+        textColorDefaultCd = textViewCountDown.getTextColors();
+
+        if (savedInstanceState == null){
+
+            Database dbHelper = new Database(this);
+            questionList = dbHelper.getAllQuestions();
+            questionCountTotal = questionList.size();
+            Collections.shuffle(questionList);
+
+            showNextQuestions();
+
+        } else {
+            questionList = savedInstanceState.getParcelableArrayList(KEY_QUESTION_LIST);
+            questionCountTotal = questionList.size();
+            questionCounter = savedInstanceState.getInt(KEY_QUESTION_COUNT);
+            currentQuestion = questionList.get(questionCounter - 1);
+            score = savedInstanceState.getInt(KEY_SCORE);
+            answered = savedInstanceState.getBoolean(Key_ANSWERED);
+
+        }
+        buttonConfirmNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!answered) {
+                    if (rb1.isChecked() || rb2.isChecked() || rb3.isChecked()) {
+                        checkAnswer();
+
+                    } else {
+                        Toast.makeText(QuizActivity0.this, "Select an answer", Toast.LENGTH_SHORT).show();
+                    }
+
+                } else {
+                    showNextQuestions();
+                    System.out.println("Hi2222222222222222222222222222");
+
+                    if(player1!=null)
+                    {
+                        player1.stop();
+                        player1.prepareAsync();
+                    }
+
+                }
+            }
+        });
+    }
+
+    private void showNextQuestions() {
+        rb1.setBackgroundColor(Color.rgb(255,127,80));
+        rb2.setBackgroundColor(Color.rgb(255,127,80));
+        rb3.setBackgroundColor(Color.rgb(255,127,80));
+        rbGroup.clearCheck();
+        if (questionCounter < questionCountTotal) {
+            currentQuestion = questionList.get(questionCounter);
+
+            textViewQuestion.setText(currentQuestion.getQuestion());
+            rb1.setText(currentQuestion.getOption1());
+            rb2.setText(currentQuestion.getOption2());
+            rb3.setText(currentQuestion.getOption3());
+
+            questionCounter++;
+            textViewQuestionCount.setText("Question: " + questionCounter + "/10" );
+            answered = false;
+            buttonConfirmNext.setText("Apply it");
+
+        } else {
+            finishQuiz();
+        }
+    }
+
+    private void checkAnswer() {
+        answered = true;
+
+        RadioButton rbSelected = findViewById(rbGroup.getCheckedRadioButtonId());
+        int answerNr = rbGroup.indexOfChild(rbSelected) + 1;
+
+        if (answerNr == currentQuestion.getAnswerNr()){
+            score++;
+            player1.start();
+            System.out.println("Hi111111111111111111111111");
+            textViewScore.setText("Score: "+score);
+        }
+
+
+
+
+        showSolution();
+
+    }
+
+    private void showSolution(){
+        rb1.setBackgroundColor(Color.RED);
+        rb2.setBackgroundColor(Color.RED);
+        rb3.setBackgroundColor(Color.RED);
+
+        switch (currentQuestion.getAnswerNr()){
+
+            case 1:
+                rb1.setBackgroundColor(Color.GREEN);
+
+                textViewQuestion.setText("Answer 1  Correct");
+
+
+                break;
+
+            case 2:
+                rb2.setBackgroundColor(Color.GREEN);
+
+                textViewQuestion.setText("Answer 2  Correct");
+
+                break;
+
+            case 3:
+                rb3.setBackgroundColor(Color.GREEN);
+
+                textViewQuestion.setText("Answer 3  Correct");
+
+                break;
+        }
+
+        if(questionCounter < questionCountTotal){
+            buttonConfirmNext.setText("Next");
+
+
+        }else{
+            buttonConfirmNext.setText("Confirm");
+
+        }
+
+
+    }
+    private void finishQuiz () {
+        Intent resultIntent= new Intent();
+        resultIntent.putExtra(EXTRA_SCORE,score);
+        setResult(RESULT_OK, resultIntent);
+        finish();
+    }
+    public  void play(){
+        while(true){
+            player1.start();
+        }
+    }
+}
